@@ -58,6 +58,7 @@ aeron-archive/
 buyer/
 buyer-archive/
 exchange-application/
+buy-sell-gateway/
 
 *-example
 artio-samples/src/main/java/uk/co/real_logic/artio/reproduction/
