@@ -60,11 +60,14 @@ public class BuySellGatewayAgent implements Agent {
      * 返回一个 SessionHandler 来处理该会话的所有消息
      */
     private SessionHandler onAcquire(final Session session) {
+        final String senderCompID = session.compositeKey().remoteCompId();
         System.out.println("📥 新会话建立: " + session.compositeKey());
         // 从 Gateway 的角度：remoteCompId 是客户端的 SenderCompID，localCompId 是 Gateway 的
         // TargetCompID
-        System.out.println("   客户端 SenderCompID: " + session.compositeKey().remoteCompId());
+        System.out.println("   客户端 SenderCompID: " + senderCompID);
         System.out.println("   Gateway TargetCompID: " + session.compositeKey().localCompId());
+        System.out.println("   会话类型: " + (senderCompID.equals("BUY") ? "📈 BUY 客户端" : senderCompID.equals("SELL") ? "📉 SELL 客户端" : "未知"));
+        System.out.flush();
         return new BuySellSessionHandler(session);
     }
 
@@ -76,7 +79,13 @@ public class BuySellGatewayAgent implements Agent {
     public int doWork() {
         // poll 方法会处理所有待处理的消息
         // FRAGMENT_LIMIT 限制每次处理的最大片段数
-        return library.poll(FRAGMENT_LIMIT);
+        final int workDone = library.poll(FRAGMENT_LIMIT);
+        // 调试：如果处理了消息，输出日志（避免日志过多，只在有消息时输出）
+        if (workDone > 0) {
+            System.out.println("[DEBUG] Agent 处理了 " + workDone + " 个消息片段");
+            System.out.flush();
+        }
+        return workDone;
     }
 
     @Override

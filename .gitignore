@@ -1,10 +1,19 @@
+# manual add start
 .cursor/
+*.class
+bin/
+scripts/
+
+# manual add end
+
 target
 GTAGS
 GRTAGS
 GPATH
 prop
 out
+
+
 
 # OS X
 .DS_Store

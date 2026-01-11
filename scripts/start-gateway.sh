@@ -85,13 +85,27 @@ echo ""
 
 # 使用 JAR 文件运行（samples.jar 是包含所有依赖的 fat JAR）
 # 注意：使用 -cp 和主类名，因为 samples.jar 可能没有设置 Main-Class
-java $JVM_OPTS \
-    -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_CHANNEL_PROP_NAME="$CONTROL_CHANNEL" \
-    -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_RESPONSE_CHANNEL_PROP_NAME="$CONTROL_RESPONSE_CHANNEL" \
-    -Dio.aeron.archive.Archive.Configuration.REPLICATION_CHANNEL_PROP_NAME="$REPLICATION_CHANNEL" \
-    -cp "artio-samples/build/libs/samples.jar" \
-    "$MAIN_CLASS" \
-    "$@"
+# 使用 stdbuf 确保输出不被缓冲，立即刷新到日志文件
+# 如果 stdout 是终端，直接输出；如果是重定向到文件，使用 unbuffered 模式
+if [ -t 1 ]; then
+    # 标准输出是终端，直接运行
+    java $JVM_OPTS \
+        -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_CHANNEL_PROP_NAME="$CONTROL_CHANNEL" \
+        -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_RESPONSE_CHANNEL_PROP_NAME="$CONTROL_RESPONSE_CHANNEL" \
+        -Dio.aeron.archive.Archive.Configuration.REPLICATION_CHANNEL_PROP_NAME="$REPLICATION_CHANNEL" \
+        -cp "artio-samples/build/libs/samples.jar" \
+        "$MAIN_CLASS" \
+        "$@"
+else
+    # 标准输出被重定向，使用 unbuffered 模式确保立即输出
+    stdbuf -oL -eL java $JVM_OPTS \
+        -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_CHANNEL_PROP_NAME="$CONTROL_CHANNEL" \
+        -Dio.aeron.archive.client.AeronArchive.Configuration.CONTROL_RESPONSE_CHANNEL_PROP_NAME="$CONTROL_RESPONSE_CHANNEL" \
+        -Dio.aeron.archive.Archive.Configuration.REPLICATION_CHANNEL_PROP_NAME="$REPLICATION_CHANNEL" \
+        -cp "artio-samples/build/libs/samples.jar" \
+        "$MAIN_CLASS" \
+        "$@"
+fi
 
 echo ""
 echo "Gateway 已停止"
